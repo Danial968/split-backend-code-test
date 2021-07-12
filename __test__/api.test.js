@@ -1,5 +1,8 @@
 const request = require('supertest')
 const app = require('../app')
+var {wipeData} = require('../database')
+// import {wipeData} from '../database'
+// var wipeData = require('../database')
 
 describe('One Settlment Per Week API TEST #1 ', () => {
     it('Testcase 1: expect response paymentDate to be 10-02-2020', async () => {
@@ -125,4 +128,143 @@ describe('Calculate Settlment Amount TEST #1 ', () => {
             ])
         expect(res.body.totalSum).toEqual(933.76)
     })
+})
+
+describe('Add a ticket through POST request ', () => {
+    it('Testcase 11: Expect to get the data', async () => {
+        const data = {
+            "ticketId":"TES2312-36",
+            "price" : "103.10",
+            "MDR" : "3.0",
+            "currency" : "SGAAADA",
+            "travelAgentName" : "SPLIT-TEST-AGENT01"
+        }
+
+        const res = await request(app)
+            .post('/tickets/')
+            .send(data)
+        expect(res.body.message).toEqual("success")
+        expect(res.body.data).toEqual(data)
+    })
+})
+
+describe('Get the ticket that was created in previous request ', () => {
+    it('Testcase 13: Expect to get the data TES2312-36 data', async () => {
+
+        const data = {
+            "ticketId":"TES2312-36",
+            "price" : 103.1,
+            "mdr" : 3,
+            "currency" : "SGAAADA",
+            "travelAgentName" : "SPLIT-TEST-AGENT01"
+        }
+
+        const res = await request(app).get('/tickets/ticket/TES2312-36')
+                    .expect(200)
+                    .then((res) => {
+                        expect(res.body.message).toEqual("success")
+                        expect(res.body.data).toEqual(data)
+                    })
+
+    })
+
+})
+
+describe('Add another ticket through PUT request ', () => {
+    it('Testcase 14: Expect to get the data', async () => {
+        const data = {
+            "ticketId":"TES2312-35",
+            "price" : "103.10",
+            "MDR" : "3.0",
+            "currency" : "SGD",
+            "travelAgentName" : "SPLIT-TEST-AGENT01"
+        }
+
+        const res = await request(app)
+            .put('/tickets/')
+            .send(data)
+        expect(res.body.message).toEqual("success")
+        expect(res.body.data).toEqual(data)
+    })
+})
+
+describe('Update ticket through PUT request ', () => {
+    it('Testcase 15: Expect to get the data', async () => {
+        const data = {
+            "ticketId":"TES2312-35",
+            "price" : "103.10",
+            "MDR" : "4.0",
+            "currency" : "SGD",
+            "travelAgentName" : "SPLIT-TEST-AGENT01"
+        }
+
+        const res = await request(app)
+            .put('/tickets/')
+            .send(data)
+        expect(res.body.message).toEqual("success")
+        expect(res.body.data).toEqual(data)
+    })
+
+
+})
+
+describe('Get the ticket that was created in previous request ', () => {
+    it('Testcase 16: Expect to get the data TES2312-36 and TEST2312-35 data', async () => {
+
+        const data = [{
+            "ticketId":"TES2312-36",
+            "price" : 103.1,
+            "mdr" : 3,
+            "currency" : "SGAAADA",
+            "travelAgentName" : "SPLIT-TEST-AGENT01"
+        },
+        {
+            "ticketId":"TES2312-35",
+            "price" : 103.1,
+            "mdr" : 4.0,
+            "currency" : "SGD",
+            "travelAgentName" : "SPLIT-TEST-AGENT01"
+        }
+
+        ]   
+
+        const res = await request(app).get('/tickets/')
+                    .expect(200)
+                    .then((res) => {
+                        expect(res.body.tickets).toEqual(data)
+                    })
+
+    })
+    // wipeData()
+})
+
+describe('Delete a ticket', () => {
+    it('Testcase 16: Ticket is no longer available', async () => {
+        const res = await request(app)
+            .delete('/tickets/TES2312-36')
+        expect(res.body.message).toEqual("deleted ticketId:TES2312-36")
+    })
+
+
+    it('Testcase 17: TES2312-36 is no longer stored', async () => {
+
+        const data = [
+        {
+            "ticketId":"TES2312-35",
+            "price" : 103.1,
+            "mdr" : 4.0,
+            "currency" : "SGD",
+            "travelAgentName" : "SPLIT-TEST-AGENT01"
+        }
+
+        ]   
+
+        const res = await request(app).get('/tickets/')
+                    .expect(200)
+                    .then((res) => {
+                        expect(res.body.tickets).toEqual(data)
+                    })
+
+    })
+    wipeData()
 })
